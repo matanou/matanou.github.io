@@ -1,0 +1,2661 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>For you</title>
+
+  <style>
+    :root{
+      --bg1:#ffd1e6;
+      --bg2:#ff6fb2;
+      --card:#fff0f7;
+      --text:#2a0b1b;
+      --muted:#6a2746;
+      --line:#ffb3d3;
+      --accent:#ff2f86;
+      --shadow: rgba(255, 47, 134, 0.22);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background:
+        radial-gradient(1200px 800px at 20% 10%, #ffffff80 0%, transparent 55%),
+        radial-gradient(900px 700px at 85% 25%, #ff2f8630 0%, transparent 55%),
+        linear-gradient(160deg, var(--bg1), var(--bg2));
+      display:grid;
+      place-items:center;
+      padding:22px;
+      color:var(--text);
+      overflow-x:hidden;
+    }
+    .card{
+      width:min(720px, 94vw);
+      background: linear-gradient(180deg, #fff6fa, var(--card));
+      border:1px solid var(--line);
+      border-radius:26px;
+      padding:22px;
+      box-shadow: 0 22px 70px rgba(0,0,0,0.18), 0 14px 40px var(--shadow);
+      position:relative;
+      overflow:hidden;
+      z-index: 2;
+    }
+    .glow{
+      position:absolute; inset:-80px;
+      background:
+        radial-gradient(circle at 25% 20%, #ff2f8640 0%, transparent 45%),
+        radial-gradient(circle at 80% 70%, #ff6fb255 0%, transparent 52%);
+      filter: blur(10px);
+      opacity:.7;
+      pointer-events:none;
+    }
+    .content{ position:relative; z-index:1; }
+
+    .top{
+      display:flex; justify-content:space-between; align-items:center;
+      gap:10px; flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:7px 11px;
+      border-radius:999px;
+      background:#ffffffb8;
+      border:1px solid var(--line);
+      color:var(--muted);
+      font-size:13px;
+    }
+    .dot{
+      width:8px; height:8px; border-radius:50%;
+      background:var(--accent);
+      box-shadow:0 0 14px #ff2f8680;
+    }
+
+    h1{
+      margin:8px 0 8px;
+      font-size: clamp(24px, 3.5vw, 38px);
+      letter-spacing:-.02em;
+      line-height:1.1;
+    }
+
+    .note{
+      margin-top:10px;
+      padding:16px;
+      border-radius:20px;
+      background:#ffffffc8;
+      border:1px solid var(--line);
+      line-height:1.45;
+      font-size:16px;
+      color:var(--text);
+    }
+    .note a{
+      color: var(--accent);
+      font-weight: 850;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .note a:hover{ filter: brightness(0.95); }
+
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+    button.main{
+      appearance:none;
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px 14px;
+      cursor:pointer;
+      font-weight:750;
+      font-size:15px;
+      transition: transform .12s ease, filter .12s ease;
+      flex: 1 1 180px;
+    }
+    button.main:hover{ transform: translateY(-1px); filter:brightness(1.02); }
+    .yes{
+      background: linear-gradient(135deg, #ff2f86, #ff6fb2);
+      color:white;
+      box-shadow: 0 14px 28px var(--shadow);
+      border-color:#ff2f8680;
+    }
+    .no{
+      background:#ffffffb8;
+      color:var(--muted);
+    }
+
+    .reply{
+      display:none;
+      margin-top:12px;
+      padding:14px;
+      border-radius:18px;
+      border:1px solid #ff2f8660;
+      background:#ff2f8612;
+      color:var(--text);
+      line-height:1.5;
+      font-size:15px;
+    }
+    .reply.show{ display:block; }
+
+    /* =========================
+       Sour Patch Kids + idle game
+       ========================= */
+    .cookieWrap{
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid #ffb3d3;
+      background: #ffffffc8;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+    }
+    .cookieMsg{
+      margin-top: 8px;
+      font-size: 15px;
+      line-height: 1.35;
+      color: var(--text);
+    }
+    .cookieMsg strong{
+      display:block;
+      color: var(--muted);
+      font-weight: 950;
+      margin-bottom: 2px;
+    }
+
+    .cookieStage{
+      position: relative;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding: 18px 10px 10px;
+      overflow: hidden;
+      border-radius: 16px;
+      border: 1px solid #ffb3d3;
+      background:
+        radial-gradient(600px 220px at 50% 0%, rgba(255,47,134,0.10), transparent 60%),
+        radial-gradient(500px 260px at 50% 120%, rgba(255,111,178,0.12), transparent 62%);
+      user-select: none;
+    }
+
+    /* Big “Sour Patch Kid” button (stylised) */
+    .cookieBig{
+      width: min(280px, 70vw);
+      aspect-ratio: 3 / 4;
+      position: relative;
+      transform: translateZ(0);
+      animation: cookieFloat 1.7s ease-in-out infinite;
+      cursor: pointer;
+      transition: transform .08s ease, filter .08s ease;
+      outline: none;
+      touch-action: manipulation;
+
+      clip-path: polygon(
+        40% 2%, 60% 2%,
+        70% 8%, 72% 16%,
+        82% 18%, 92% 30%,
+        82% 36%, 76% 46%,
+        76% 62%,
+        84% 78%, 72% 94%,
+        58% 94%, 56% 72%,
+        44% 72%, 42% 94%,
+        28% 94%, 16% 78%,
+        24% 62%,
+        24% 46%, 18% 36%,
+        8% 30%, 18% 18%,
+        28% 16%, 30% 8%
+      );
+
+      background:
+        radial-gradient(circle at 30% 25%, rgba(255,255,255,0.40), transparent 46%),
+        linear-gradient(180deg, var(--kidHi, #7df5a1), var(--kidBase, #38d66b));
+
+      border: 2px solid rgba(0,0,0,0.06);
+      box-shadow:
+        0 26px 60px rgba(0,0,0,0.18),
+        0 16px 34px var(--shadow),
+        inset 0 -18px 34px rgba(0,0,0,0.10),
+        inset 0 16px 30px rgba(255,255,255,0.22);
+      filter: saturate(1.08);
+    }
+    .cookieBig:hover{ filter: saturate(1.12) brightness(1.01); }
+    .cookieBig:active{ transform: scale(0.985); }
+    .cookieBig:focus-visible{
+      box-shadow:
+        0 26px 60px rgba(0,0,0,0.18),
+        0 16px 34px var(--shadow),
+        inset 0 -18px 34px rgba(0,0,0,0.10),
+        inset 0 16px 30px rgba(255,255,255,0.22),
+        0 0 0 4px rgba(255,47,134,0.20);
+    }
+    @keyframes cookieFloat{
+      0%,100%{ transform: translateY(0); }
+      50%{ transform: translateY(-6px); }
+    }
+
+    .cookieBig:before{
+      content:"";
+      position:absolute;
+      inset: 0;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle, rgba(255,255,255,0.65) 1px, transparent 1.7px) 0 0 / 12px 12px,
+        radial-gradient(circle, rgba(255,255,255,0.55) 1px, transparent 1.7px) 6px 6px / 14px 14px;
+      opacity: .55;
+      mix-blend-mode: overlay;
+      pointer-events:none;
+      filter: blur(0.2px);
+    }
+    .cookieBig:after{
+      content:"";
+      position:absolute;
+      inset: 12%;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 30% 25%, rgba(255,255,255,0.28), transparent 44%),
+        radial-gradient(circle at 70% 78%, rgba(0,0,0,0.10), transparent 55%);
+      filter: blur(1px);
+      opacity: .85;
+      pointer-events:none;
+    }
+
+    .kidEye{
+      position:absolute;
+      top: 23%;
+      width: 16px; height: 16px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.14);
+      box-shadow:
+        inset 0 2px 3px rgba(255,255,255,0.18),
+        0 6px 12px rgba(0,0,0,0.10);
+      opacity: .85;
+      pointer-events:none;
+      filter: blur(0.1px);
+    }
+    .kidEye.left{ left: 36%; }
+    .kidEye.right{ right: 36%; }
+    .kidMouth{
+      position:absolute;
+      top: 33%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 54px; height: 18px;
+      border-radius: 999px;
+      border-bottom: 4px solid rgba(0,0,0,0.14);
+      opacity: .75;
+      pointer-events:none;
+      filter: blur(0.1px);
+    }
+
+    /* hearts around kid */
+    .heart{
+      position:absolute;
+      left: 50%;
+      top: 50%;
+      width: 18px;
+      height: 18px;
+      transform:
+        translate(calc(var(--x) * 1px), calc(var(--y) * 1px))
+        rotate(-45deg)
+        scale(var(--s));
+      background: linear-gradient(135deg, #ff2f86, #ff6fb2);
+      border-radius: 4px;
+      box-shadow: 0 10px 22px rgba(255,47,134,0.22);
+      opacity: .95;
+      animation: heartPulse 1.2s ease-in-out infinite;
+      animation-delay: calc(var(--d) * 1s);
+      pointer-events:none;
+      filter: drop-shadow(0 10px 14px rgba(0,0,0,0.12));
+    }
+    .heart:before,
+    .heart:after{
+      content:"";
+      position:absolute;
+      width: 18px;
+      height: 18px;
+      background: inherit;
+      border-radius: 999px;
+    }
+    .heart:before{ top: -9px; left: 0; }
+    .heart:after{ left: 9px; top: 0; }
+    @keyframes heartPulse{
+      0%,100%{
+        transform: translate(calc(var(--x) * 1px), calc(var(--y) * 1px)) rotate(-45deg) scale(var(--s));
+        opacity: .88;
+      }
+      50%{
+        transform: translate(calc(var(--x) * 1px), calc(var(--y) * 1px)) rotate(-45deg) scale(calc(var(--s) * 1.12));
+        opacity: 1;
+      }
+    }
+
+    .tapHint{
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid #ffb3d3;
+      background: #fff6fa;
+      color: rgba(106,39,70,0.92);
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .gamePanel{
+      display:none;
+      margin-top: 12px;
+    }
+    .gamePanel.show{
+      display:block;
+      animation: panelIn .22s ease both;
+    }
+    @keyframes panelIn{
+      from{ transform: translateY(8px); opacity: 0; }
+      to{ transform: translateY(0); opacity: 1; }
+    }
+
+    .statsGrid{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .statCard{
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid #ffb3d3;
+      background: #fff6fa;
+      box-shadow: 0 10px 18px rgba(0,0,0,0.06);
+      min-width: 0;
+    }
+    .statLabel{
+      font-size: 12px;
+      color: rgba(106,39,70,0.85);
+      font-weight: 850;
+      margin-bottom: 4px;
+      letter-spacing: .2px;
+    }
+    .statValue{
+      font-size: 16px;
+      font-weight: 950;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cookieCounter{
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid #ff2f8660;
+      background: #ff2f8610;
+      color: var(--muted);
+      font-weight: 900;
+      font-size: 13.5px;
+    }
+
+    .shop{
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid #ffb3d3;
+      background: #ffffffc8;
+    }
+    .shopTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .shopTitle{
+      font-weight: 950;
+      color: var(--muted);
+      letter-spacing: .2px;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .shopGrid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .shopBtn{
+      width:100%;
+      text-align:left;
+      border: 1px solid #ffb3d3;
+      background: #fff6fa;
+      border-radius: 14px;
+      padding: 10px 12px;
+      cursor:pointer;
+      font-weight: 900;
+      color: var(--text);
+      transition: filter .12s ease;
+      outline: none;
+      user-select:none;
+    }
+    .shopBtn:hover{ filter: brightness(1.01); }
+    .shopBtn.isDisabled{ opacity: .55; }
+    .shopBtn small{
+      display:block;
+      margin-top: 2px;
+      color: rgba(106,39,70,0.85);
+      font-weight: 850;
+      line-height: 1.25;
+    }
+    .upRow{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap: 10px;
+    }
+    .ownedPill{
+      flex: 0 0 auto;
+      font-size: 12px;
+      font-weight: 950;
+      color: var(--muted);
+      border: 1px solid #ffb3d3;
+      background: #ffffffc8;
+      border-radius: 999px;
+      padding: 4px 8px;
+      white-space: nowrap;
+    }
+    .tagLocked{
+      display:inline-block;
+      margin-left: 6px;
+      font-size: 11px;
+      font-weight: 950;
+      color: #fff;
+      border: 1px solid #ff2f8680;
+      background: linear-gradient(135deg, #ff2f86, #ff6fb2);
+      border-radius: 999px;
+      padding: 3px 8px;
+      vertical-align: middle;
+    }
+
+    .shopToast{
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid #ff2f8660;
+      background: #ff2f8610;
+      color: var(--muted);
+      font-weight: 900;
+      font-size: 13px;
+      display:none;
+    }
+    .shopToast.show{ display:block; animation: toastIn .15s ease both; }
+    @keyframes toastIn{
+      from{ transform: translateY(4px); opacity: 0; }
+      to{ transform: translateY(0); opacity: 1; }
+    }
+
+    .actionBtnSmall{
+      border:1px solid var(--line);
+      background:#ffffffc8;
+      color: var(--muted);
+      border-radius: 12px;
+      padding: 8px 12px;
+      cursor:pointer;
+      font-weight: 950;
+      font-size: 12px;
+      transition: filter .12s ease, opacity .12s ease;
+      user-select:none;
+      white-space: nowrap;
+    }
+    .actionBtnSmall:hover{ filter:brightness(0.98); }
+    .hidden{ display:none !important; }
+
+    @media (min-width: 640px){
+      .shopGrid{ grid-template-columns: 1fr 1fr; }
+    }
+
+    /* =========================
+       Bottom “cba to play” area
+       ========================= */
+    .cbaWrap{
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid #ffb3d3;
+      background: #fff6fa;
+      text-align:center;
+    }
+    .cbaText{
+      font-weight: 950;
+      color: rgba(106,39,70,0.92);
+      font-size: 12.5px;
+      letter-spacing: .2px;
+    }
+    .cbaBtn{
+      margin-top: 8px;
+      width: min(260px, 86%);
+    }
+
+    /* =========================
+       Falling mini “Sour Patch Kids”
+       ========================= */
+    .miniCookie{
+      position: fixed;
+      width: 26px;
+      height: 34px;
+      z-index: 999;
+      pointer-events:none;
+      will-change: transform, opacity;
+      animation: fallCookie var(--t) ease-in forwards;
+      opacity: 0.98;
+
+      clip-path: polygon(
+        40% 2%, 60% 2%,
+        70% 8%, 72% 16%,
+        82% 18%, 92% 30%,
+        82% 36%, 76% 46%,
+        76% 62%,
+        84% 78%, 72% 94%,
+        58% 94%, 56% 72%,
+        44% 72%, 42% 94%,
+        28% 94%, 16% 78%,
+        24% 62%,
+        24% 46%, 18% 36%,
+        8% 30%, 18% 18%,
+        28% 16%, 30% 8%
+      );
+
+      background:
+        radial-gradient(circle at 30% 25%, rgba(255,255,255,0.35), transparent 45%),
+        linear-gradient(180deg, var(--kidHi, #ffc06a), var(--kidBase, #ff8a00));
+      border: 1px solid rgba(0,0,0,0.06);
+      box-shadow:
+        0 18px 26px rgba(0,0,0,0.15),
+        0 10px 20px rgba(255,47,134,0.12),
+        inset 0 -10px 16px rgba(0,0,0,0.10),
+        inset 0 8px 14px rgba(255,255,255,0.20);
+      filter: saturate(1.06);
+    }
+    .miniCookie:after{
+      content:"";
+      position:absolute;
+      inset: 0;
+      border-radius: 16px;
+      background:
+        radial-gradient(circle, rgba(255,255,255,0.60) 1px, transparent 1.7px) 0 0 / 10px 10px,
+        radial-gradient(circle, rgba(255,255,255,0.52) 1px, transparent 1.7px) 5px 5px / 12px 12px;
+      opacity: .55;
+      mix-blend-mode: overlay;
+      pointer-events:none;
+      filter: blur(0.2px);
+    }
+    .miniChip{
+      position:absolute;
+      width: 4px; height: 4px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.80);
+      opacity: .65;
+    }
+    @keyframes fallCookie{
+      0%   { transform: translate3d(0,0,0) rotate(0deg); opacity: 1; }
+      100% { transform: translate3d(var(--dx), var(--dy), 0) rotate(var(--rot)); opacity: 0; }
+    }
+
+    /* =========================
+       Photo Album (orbit sphere)
+       ========================= */
+    .albumWrap{
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid #ffb3d3;
+      background: #ffffffc8;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+    }
+    .albumBanner{
+      position: relative;
+      border-radius: 14px;
+      border: 1px solid #ffb3d3;
+      background: radial-gradient(900px 240px at 50% 0%, rgba(255,47,134,0.15), transparent 60%),
+                  radial-gradient(900px 240px at 50% 100%, rgba(255,111,178,0.14), transparent 60%),
+                  #fff6fa;
+      padding: 16px 12px 14px;
+      overflow:hidden;
+    }
+    .albumText{
+      text-align:center;
+      font-weight: 1000;
+      letter-spacing: -0.02em;
+      color: #7b1845;
+      font-size: clamp(18px, 2.6vw, 26px);
+      text-shadow:
+        0 14px 30px rgba(255,47,134,0.18),
+        0 2px 0 rgba(255,255,255,0.55);
+      animation: albumPop 0.35s ease both;
+    }
+    @keyframes albumPop{
+      from{ transform: translateY(10px) scale(0.98); opacity: 0; }
+      to{ transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    .sparkRow{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      opacity: 0.95;
+    }
+    .sparkHeart{
+      position:absolute;
+      width: 14px;
+      height: 14px;
+      transform: rotate(-45deg);
+      border-radius: 3px;
+      background: linear-gradient(135deg, #ff2f86, #ff6fb2);
+      filter: drop-shadow(0 10px 14px rgba(255,47,134,0.25));
+      animation: sparkleFloat 2.4s ease-in-out infinite;
+      opacity: 0.9;
+    }
+    .sparkHeart:before, .sparkHeart:after{
+      content:"";
+      position:absolute;
+      width: 14px; height: 14px;
+      background: inherit;
+      border-radius: 999px;
+    }
+    .sparkHeart:before{ top:-7px; left:0; }
+    .sparkHeart:after{ left:7px; top:0; }
+    .sparkHeart i{
+      position:absolute;
+      inset:-10px;
+      background:
+        radial-gradient(circle, rgba(255,255,255,0.9) 1px, transparent 2px) 0 0 / 12px 12px,
+        radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 2px) 6px 6px / 14px 14px;
+      opacity: 0.55;
+      mix-blend-mode: overlay;
+      filter: blur(0.2px);
+      border-radius: 999px;
+    }
+    @keyframes sparkleFloat{
+      0%,100%{ transform: translateY(0) rotate(-45deg) scale(0.95); opacity: 0.75; }
+      50%{ transform: translateY(-8px) rotate(-45deg) scale(1.12); opacity: 1; }
+    }
+
+    .albumStage{
+      position: relative;
+      margin-top: 10px;
+      border-radius: 16px;
+      border: 1px solid #ffb3d3;
+      background:
+        radial-gradient(900px 340px at 50% 0%, rgba(255,47,134,0.12), transparent 60%),
+        radial-gradient(900px 420px at 50% 120%, rgba(255,111,178,0.14), transparent 62%),
+        #fff;
+      overflow: hidden;
+      height: min(660px, 80vh);
+      min-height: 520px;
+      box-shadow: 0 12px 22px rgba(0,0,0,0.06);
+      user-select:none;
+    }
+
+    .albumHint{
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid #ffb3d3;
+      background: #fff6fa;
+      color: rgba(106,39,70,0.92);
+      font-weight: 900;
+      font-size: 12.5px;
+      text-align:center;
+    }
+
+    /* UPDATED: bigger base thumbs, better clarity when scaled */
+    .thumb{
+      position:absolute;
+      left: 0;
+      top: 0;
+
+      width: 96px;
+      height: 96px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,47,134,0.22);
+      background: #fff;
+      padding: 0;
+      cursor: pointer;
+
+      /* IMPORTANT: remove the old "transform: translate(-50%,-50%)" here */
+      /* JS will set the full transform each frame */
+
+      box-shadow: 0 16px 28px rgba(0,0,0,0.10), 0 10px 22px rgba(255,47,134,0.10);
+      overflow:hidden;
+      outline:none;
+      transition: filter .12s ease;
+      will-change: transform, opacity;
+      backface-visibility: hidden;
+      transform-style: preserve-3d;
+    }
+
+    .thumb:hover{ filter: brightness(1.02); }
+    .thumb:focus-visible{
+      box-shadow: 0 16px 28px rgba(0,0,0,0.10), 0 10px 22px rgba(255,47,134,0.10),
+                  0 0 0 4px rgba(255,47,134,0.18);
+    }
+    .thumb img{
+      width:100%;
+      height:100%;
+      object-fit: cover;
+      display:block;
+      filter: saturate(1.04);
+      image-rendering: auto;
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+    }
+    .thumb:after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(circle at 25% 18%, rgba(255,255,255,0.30), transparent 40%),
+        radial-gradient(circle at 85% 88%, rgba(0,0,0,0.12), transparent 55%);
+      pointer-events:none;
+      opacity: 0.9;
+    }
+    /* "Quality boost" when scaled up (perceived crispness) */
+    .thumb.hq img{
+      filter: saturate(1.10) contrast(1.06);
+      image-rendering: -webkit-optimize-contrast;
+    }
+
+    /* =========================
+       Floating Bear Popups
+       ========================= */
+    .bearFloat{
+      position: fixed;
+      width: min(360px, 86vw);
+      border-radius: 22px;
+      border: 1px solid #ff2f8660;
+      background: #fff6fa;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.14), 0 10px 30px var(--shadow);
+      padding: 14px;
+      z-index: 10;
+      transform: scale(0.96);
+      opacity: 0;
+      animation: popIn .18s ease forwards;
+    }
+    @keyframes popIn{ to { transform: scale(1); opacity: 1; } }
+    .bearTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom: 10px;
+    }
+    .bearTitle{
+      font-weight: 900;
+      color: var(--muted);
+      font-size: 13.5px;
+      letter-spacing: .2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 75%;
+    }
+    .closeBtn{
+      border:1px solid var(--line);
+      background:#ffffffc8;
+      color: var(--muted);
+      border-radius: 12px;
+      padding: 7px 12px;
+      cursor:pointer;
+      font-weight: 850;
+      font-size: 12px;
+    }
+    .bearRow{ display:flex; gap:12px; align-items:center; }
+    .bear{
+      width: 92px;
+      height: 92px;
+      position: relative;
+      flex: 0 0 auto;
+    }
+    .bear .head{
+      position:absolute; inset:0;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #c98a63, #b87956);
+      border: 1px solid rgba(0,0,0,0.08);
+      box-shadow: inset 0 -8px 18px rgba(0,0,0,0.10);
+    }
+    .bear .ear{
+      position:absolute;
+      width: 32px; height: 32px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #c98a63, #b87956);
+      border: 1px solid rgba(0,0,0,0.08);
+      top: -8px;
+    }
+    .bear .ear.left{ left: -6px; }
+    .bear .ear.right{ right: -6px; }
+    .bear .ear:after{
+      content:"";
+      position:absolute; inset:9px;
+      border-radius:999px;
+      background: rgba(255,255,255,0.22);
+    }
+    .bear .snout{
+      position:absolute;
+      left:50%; top:52px;
+      transform: translateX(-50%);
+      width: 48px; height: 32px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.35);
+      border: 1px solid rgba(0,0,0,0.06);
+    }
+    .bear .nose{
+      position:absolute;
+      left:50%; top:59px;
+      transform: translateX(-50%);
+      width: 14px; height: 9px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.35);
+    }
+    .bear .eye{
+      position:absolute;
+      top: 38px;
+      width: 9px; height: 9px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.55);
+    }
+    .bear .eye.left{ left: 26px; }
+    .bear .eye.right{ right: 26px; }
+    .tear{
+      position:absolute;
+      top: 46px;
+      width: 10px; height: 13px;
+      border-radius: 999px;
+      background: rgba(80, 170, 255, 0.92);
+      box-shadow: 0 10px 18px rgba(80,170,255,0.22);
+      opacity: 0;
+      animation: tearDrop 0.9s linear infinite;
+    }
+    .tear.left{ left: 21px; }
+    .tear.right{ right: 21px; animation-delay: 0.2s; }
+    @keyframes tearDrop{
+      0%   { transform: translateY(0) scale(0.9); opacity: 0; }
+      15%  { opacity: 1; }
+      100% { transform: translateY(24px) scale(1.05); opacity: 0; }
+    }
+    .bearText{
+      flex: 1 1 auto;
+      color: var(--text);
+      font-size: 14.5px;
+      line-height: 1.35;
+    }
+    .bearText strong{
+      display:block;
+      margin-bottom: 4px;
+      color: var(--muted);
+      font-weight: 900;
+    }
+
+    /* =========================
+       PDF modal
+       ========================= */
+    .latexOverlay{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 100;
+    }
+    .latexOverlay.show{ display: flex; }
+    .latexWindow{
+      width: min(980px, 96vw);
+      height: min(92vh, 980px);
+      background: linear-gradient(180deg, #fff6fa, #ffe2f1);
+      border: 1px solid #ff2f8660;
+      border-radius: 22px;
+      box-shadow: 0 26px 90px rgba(0,0,0,0.28), 0 14px 40px var(--shadow);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .latexBar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      background: #ffffffb8;
+      border-bottom: 1px solid #ffb3d3;
+    }
+    .latexLeft{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width: 0;
+    }
+    .dots{ display:flex; gap:6px; }
+    .dots span{
+      width:10px; height:10px; border-radius:999px;
+      display:inline-block;
+      background: #ff2f86;
+      box-shadow: 0 0 10px rgba(255,47,134,0.35);
+    }
+    .dots span:nth-child(2){ background:#ff6fb2; }
+    .dots span:nth-child(3){ background:#ffd1e6; box-shadow:none; border:1px solid #ffb3d3; }
+    .latexTitle{
+      font-weight: 900;
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 55vw;
+    }
+    .latexActions{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .actionBtn{
+      border:1px solid var(--line);
+      background:#ffffffc8;
+      color: var(--muted);
+      border-radius: 12px;
+      padding: 8px 12px;
+      cursor:pointer;
+      font-weight: 900;
+      font-size: 12px;
+    }
+    .actionBtn.primary{
+      border-color:#ff2f8680;
+      color:#fff;
+      background: linear-gradient(135deg, #ff2f86, #ff6fb2);
+      box-shadow: 0 10px 22px var(--shadow);
+    }
+    .latexBody{
+      padding: 12px;
+      flex: 1;
+      min-height: 0;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .pdfFrame{
+      width: 100%;
+      flex: 1;
+      min-height: 0;
+      border: 0;
+      border-radius: 16px;
+      background:#fff;
+      border: 1px solid #ffb3d3;
+    }
+    .pdfHint{
+      font-size: 12.5px;
+      color: rgba(106,39,70,0.85);
+      line-height: 1.35;
+    }
+    .pdfHint a{
+      color: var(--accent);
+      font-weight: 900;
+    }
+    #latexSource { display:none; }
+
+    /* =========================
+       Admin modal
+       ========================= */
+    .adminOverlay{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 110;
+    }
+    .adminOverlay.show{ display:flex; }
+    .adminWindow{
+      width: min(760px, 96vw);
+      height: min(86vh, 760px);
+      background: linear-gradient(180deg, #fff6fa, #ffe2f1);
+      border: 1px solid #ff2f8660;
+      border-radius: 22px;
+      box-shadow: 0 26px 90px rgba(0,0,0,0.28), 0 14px 40px var(--shadow);
+      overflow: hidden;
+      display:flex;
+      flex-direction: column;
+    }
+    .adminBar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      background: #ffffffb8;
+      border-bottom: 1px solid #ffb3d3;
+    }
+    .adminTitle{
+      font-weight: 950;
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: .2px;
+    }
+    .adminBody{
+      padding: 12px;
+      flex: 1;
+      min-height: 0;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      overflow:auto;
+    }
+    .adminCard{
+      border: 1px solid #ffb3d3;
+      background: #ffffffc8;
+      border-radius: 16px;
+      padding: 12px;
+    }
+    .adminRow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .adminLabel{
+      font-weight: 950;
+      color: rgba(106,39,70,0.92);
+      font-size: 12px;
+      margin-bottom: 8px;
+      letter-spacing: .2px;
+    }
+    .adminInput{
+      flex: 1 1 220px;
+      border: 1px solid #ffb3d3;
+      background: #fff6fa;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight: 850;
+      color: var(--text);
+      outline:none;
+    }
+    .adminCheck{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      font-weight: 900;
+      color: rgba(42,11,27,0.9);
+      font-size: 12px;
+      user-select:none;
+    }
+    .adminTextarea{
+      width:100%;
+      min-height: 150px;
+      border: 1px solid #ffb3d3;
+      background: #fff6fa;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight: 800;
+      color: var(--text);
+      outline:none;
+      resize: vertical;
+    }
+
+    .adminCornerBtn{
+      position: fixed;
+      right: 10px;
+      bottom: 10px;
+      width: 34px;
+      height: 34px;
+      border: 0;
+      background: transparent;
+      opacity: 0;
+      cursor: pointer;
+      z-index: 120;
+    }
+    .adminCornerBtn:focus-visible{
+      opacity: .25;
+      outline: 2px solid rgba(255,47,134,0.55);
+      border-radius: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card" id="card">
+    <div class="glow"></div>
+    <div class="content">
+      <div class="top">
+        <div class="chip"><span class="dot"></span> for you</div>
+        <div class="chip" id="date"></div>
+      </div>
+
+      <h1>Hey <span id="name">you</span>,</h1>
+      <div class="note" id="note"></div>
+
+      <div class="row">
+        <button class="main yes" id="yes">Yes</button>
+        <button class="main no" id="no">No</button>
+      </div>
+
+      <div class="reply" id="reply"></div>
+    </div>
+  </div>
+
+  <button id="adminCornerBtn" class="adminCornerBtn" type="button" aria-label="admin"></button>
+
+  <!-- PDF modal -->
+  <div class="latexOverlay" id="latexOverlay" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="latexWindow">
+      <div class="latexBar">
+        <div class="latexLeft">
+          <div class="dots" aria-hidden="true"><span></span><span></span><span></span></div>
+          <div class="latexTitle">Lucie’s Theorem (PDF)</div>
+        </div>
+        <div class="latexActions">
+          <button class="actionBtn" id="openPdfTab">open</button>
+          <button class="actionBtn primary" id="downloadPdf">download PDF</button>
+          <button class="actionBtn" id="copyLatex">copy .tex</button>
+          <button class="actionBtn" id="downloadLatex">download .tex</button>
+          <button class="actionBtn" id="closeLatex">close</button>
+        </div>
+      </div>
+
+      <div class="latexBody">
+        <iframe
+          class="pdfFrame"
+          id="pdfFrame"
+          src="Lucie_s_theorem.pdf#zoom=page-width"
+          title="Lucie’s Theorem PDF"
+        ></iframe>
+
+        <div class="pdfHint">
+          If the PDF doesn’t show, tap <a href="Lucie_s_theorem.pdf" target="_blank" rel="noopener">open</a>.
+        </div>
+
+        <pre id="latexSource">\documentclass[12pt]{article}
+% (kept here for copy/download)
+\end{document}</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin modal -->
+  <div class="adminOverlay" id="adminOverlay" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="adminWindow">
+      <div class="adminBar">
+        <div class="adminTitle">admin / test panel</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
+          <button class="actionBtn" id="adminClose">close</button>
+        </div>
+      </div>
+
+      <div class="adminBody">
+        <div class="adminCard">
+          <div class="adminLabel">quick stash</div>
+          <div class="adminRow">
+            <button class="actionBtnSmall" id="aAdd1k" type="button">+1k kids</button>
+            <button class="actionBtnSmall" id="aAdd1m" type="button">+1M kids</button>
+            <button class="actionBtnSmall" id="aAdd1b" type="button">+1B kids</button>
+          </div>
+          <div style="height:10px"></div>
+          <div class="adminRow">
+            <input class="adminInput" id="aSetStash" type="text" inputmode="numeric" placeholder="set stash to… (e.g. 250000)" />
+            <button class="actionBtnSmall" id="aApplyStash" type="button">apply</button>
+          </div>
+        </div>
+
+        <div class="adminCard">
+          <div class="adminLabel">toggles</div>
+          <div class="adminRow">
+            <label class="adminCheck"><input id="aShowAll" type="checkbox" /> show all buildings</label>
+            <label class="adminCheck"><input id="aIgnoreLocks" type="checkbox" /> ignore locks</label>
+            <label class="adminCheck"><input id="aFreeBuys" type="checkbox" /> free buys</label>
+          </div>
+          <div style="height:10px"></div>
+          <div class="adminRow">
+            <button class="actionBtnSmall" id="aOwn1Each" type="button">own 1 of each</button>
+            <button class="actionBtnSmall" id="aOwn50Each" type="button">own 50 of each</button>
+            <button class="actionBtnSmall" id="aMaxBoosts" type="button">max boosts</button>
+          </div>
+        </div>
+
+        <div class="adminCard">
+          <div class="adminLabel">save tools</div>
+          <div class="adminRow">
+            <button class="actionBtnSmall" id="aExport" type="button">copy save JSON</button>
+            <button class="actionBtnSmall" id="aImport" type="button">import JSON</button>
+            <button class="actionBtnSmall" id="aWipe" type="button">wipe save</button>
+          </div>
+          <div style="height:10px"></div>
+          <textarea class="adminTextarea" id="aJson" placeholder="paste save JSON here…"></textarea>
+        </div>
+
+        <div class="pdfHint" style="padding:0 2px;">
+          tip: press <strong>Ctrl + Shift + A</strong> to open this panel.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // date
+    const d = new Date();
+    document.getElementById('date').textContent =
+      d.toLocaleDateString(undefined, { month:'long', day:'numeric', year:'numeric' });
+
+    // EDIT THESE:
+    const herName = "Lucie";
+    const message = `I love you so much baby you're the best girlfriend (''blablabla I'm not your girlfriend blablabla'') I could ever dream to have. I know we've had our ups and downs, but I'm so glad to have you in my life. I'm the luckiest man on earth and also the happiest (which I have proved mathematically see <a href="#" id="proofLink">here</a>). You have the best smile and I love your laugh because it is SO contagious, and it genuinely brings me pure joy. I really don't know how to say this in any other way Lucie, but I love you with my whole heart! Will you be my Valentine?`;
+
+    document.getElementById('name').textContent = herName;
+    document.getElementById('note').innerHTML = message;
+
+    const reply = document.getElementById('reply');
+    const cardEl = document.getElementById('card');
+
+    // ====== Floating bear doubling logic ======
+    let noClicks = 0;
+    const bearEls = new Set();
+    const MAX_BEARS = 128;
+
+    function desiredTotal(clicks){
+      const t = Math.pow(2, Math.max(0, clicks - 1));
+      return Math.min(t, MAX_BEARS);
+    }
+    function rectsIntersect(a, b){
+      return !(a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom);
+    }
+    function expandedRect(r, pad){
+      return { left:r.left-pad, top:r.top-pad, right:r.right+pad, bottom:r.bottom+pad };
+    }
+
+    function placeFloating(el){
+      el.style.left = '-9999px';
+      el.style.top = '-9999px';
+      document.body.appendChild(el);
+
+      const pad = 14;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      const elRect = el.getBoundingClientRect();
+      const w = elRect.width;
+      const h = elRect.height;
+
+      const cardRect = expandedRect(cardEl.getBoundingClientRect(), 22);
+
+      const avoidRects = [cardRect];
+      for (const b of bearEls){
+        avoidRects.push(expandedRect(b.getBoundingClientRect(), 8));
+      }
+
+      let best = { x: pad, y: pad };
+      let ok = false;
+
+      const tries = 120;
+      for (let i = 0; i < tries; i++){
+        const x = Math.round(pad + (vw - pad - w) * Math.random());
+        const y = Math.round(pad + (vh - pad - h) * Math.random());
+        const cand = { left:x, top:y, right:x+w, bottom:y+h };
+
+        if (cand.left < pad || cand.top < pad || cand.right > vw - pad || cand.bottom > vh - pad) continue;
+
+        let overlaps = false;
+        for (const r of avoidRects){
+          if (rectsIntersect(cand, r)) { overlaps = true; break; }
+        }
+        if (overlaps) continue;
+
+        best = { x, y };
+        ok = true;
+        break;
+      }
+
+      if (!ok){
+        for (let i = 0; i < tries; i++){
+          const x = Math.round(pad + (vw - pad - w) * Math.random());
+          const y = Math.round(pad + (vh - pad - h) * Math.random());
+          const cand = { left:x, top:y, right:x+w, bottom:y+h };
+          if (!rectsIntersect(cand, cardRect)) { best = { x, y }; break; }
+        }
+      }
+
+      el.style.left = best.x + 'px';
+      el.style.top  = best.y + 'px';
+    }
+
+    // ====== Bears ======
+    function makeBearPopup(n){
+      const el = document.createElement('div');
+      el.className = 'bearFloat';
+      el.setAttribute('role', 'dialog');
+      el.innerHTML = `
+        <div class="bearTop">
+          <div class="bearTitle">NoOoOoOoOOoOooOoOoOOoooooo${n ? ` (x${n})` : ''}</div>
+          <button class="closeBtn" type="button">close</button>
+        </div>
+        <div class="bearRow">
+          <div class="bear" aria-hidden="true">
+            <div class="ear left"></div>
+            <div class="ear right"></div>
+            <div class="head"></div>
+            <div class="eye left"></div>
+            <div class="eye right"></div>
+            <div class="tear left"></div>
+            <div class="tear right"></div>
+            <div class="snout"></div>
+            <div class="nose"></div>
+          </div>
+          <div class="bearText">
+            <strong>YOU CAN'T DO THAT TF</strong>
+            okay. press yes now.
+          </div>
+        </div>
+      `;
+      el.querySelector('.closeBtn').addEventListener('click', () => {
+        bearEls.delete(el);
+        el.remove();
+      });
+      return el;
+    }
+    function placeBear(el){ placeFloating(el); }
+    function spawnUntilTotal(targetTotal){
+      const current = bearEls.size;
+      if (current >= targetTotal) return;
+      const need = targetTotal - current;
+      for (let i = 0; i < need; i++){
+        const el = makeBearPopup(targetTotal);
+        placeBear(el);
+        bearEls.add(el);
+      }
+    }
+    function clearBears(){
+      for (const el of bearEls) el.remove();
+      bearEls.clear();
+    }
+
+    window.addEventListener('resize', () => {
+      for (const el of Array.from(bearEls)) placeBear(el);
+      if (album.inited) albumRelayout();
+    });
+
+    // ====== Sour Patch Kids idle game ======
+    const SAVE_KEY_V6 = "lucie_spk_idle_v6";
+    const SAVE_KEY_V5 = "lucie_spk_idle_v5";
+    const SAVE_KEY_V4 = "lucie_cookie_idle_v4";
+    const SAVE_KEY_V3 = "lucie_cookie_idle_v3";
+    const SAVE_KEY_V2 = "lucie_cookie_idle_v2";
+
+    const SPK_PALETTE = [
+      { base:"#ff3b3b", hi:"#ff9a9a" },
+      { base:"#ff8a00", hi:"#ffd08a" },
+      { base:"#ffe100", hi:"#fff3a8" },
+      { base:"#38d66b", hi:"#a0f5b8" },
+      { base:"#2b7bff", hi:"#a7c8ff" },
+      { base:"#ff4fd6", hi:"#ffb0ec" }
+    ];
+    function pickPalette(){
+      return SPK_PALETTE[Math.floor(Math.random() * SPK_PALETTE.length)];
+    }
+
+    const BUILDINGS = [
+      { name:"Sour Buddy",        desc:"Always ‘helping’.",                  baseCost: 15,           cps: 0.10 },
+      { name:"Gummy Garden",      desc:"Grows fresh sour kids.",             baseCost: 100,          cps: 0.70 },
+      { name:"Citric Mine",       desc:"Digs up pure sour power.",           baseCost: 1100,         cps: 4.00 },
+      { name:"Patch Workshop",    desc:"Mass-produces troublemakers.",       baseCost: 12000,        cps: 20.0 },
+      { name:"Sugar Bank",        desc:"High-interest… in kids.",            baseCost: 130000,       cps: 120  },
+      { name:"Sour Shrine",       desc:"Prays kids into existence.",         baseCost: 1400000,      cps: 700  },
+      { name:"Flavor Tower",      desc:"Unstable experiments. Worth it.",    baseCost: 20000000,     cps: 4000 },
+      { name:"Candy Shipment",    desc:"Imports kids from far away.",        baseCost: 330000000,    cps: 25000},
+      { name:"Sour Lab",          desc:"Science. Chaos. Kids.",              baseCost: 5100000000,   cps: 150000},
+      { name:"Patch Galaxy",      desc:"Entire galaxies of sour kids.",      baseCost: 75000000000,  cps: 900000}
+    ];
+
+    const BOOSTS = {
+      bite: { name:"+1 chew power",   desc:"Adds +1 kid per tap.",        baseCost: 25, mult: 1.33 },
+      oven: { name:"+0.6 sour flow",  desc:"Adds +0.6 kids per second.",  baseCost: 40, mult: 1.35, cps: 0.6 }
+    };
+
+    let game = {
+      bank: 0,
+      clicks: 0,
+      biteLvl: 0,
+      ovenLvl: 0,
+      owned: new Array(BUILDINGS.length).fill(0),
+      totalEarned: 0
+    };
+
+    const admin = {
+      showAll: false,
+      ignoreLocks: false,
+      freeBuys: false
+    };
+
+    function safeNumber(x, fallback=0){
+      return (typeof x === "number" && Number.isFinite(x)) ? x : fallback;
+    }
+
+    function estimateSpentFromState(state){
+      const owned = state.owned || new Array(BUILDINGS.length).fill(0);
+      const biteLvl = Math.max(0, Math.floor(safeNumber(state.biteLvl, 0)));
+      const ovenLvl = Math.max(0, Math.floor(safeNumber(state.ovenLvl, 0)));
+
+      let spent = 0;
+
+      for (let i = 0; i < BUILDINGS.length; i++){
+        const n = Math.max(0, Math.floor(safeNumber(owned[i], 0)));
+        const base = BUILDINGS[i].baseCost;
+
+        if (n > 5000){
+          spent += base * (Math.pow(1.15, n) - 1) / 0.15;
+        } else {
+          for (let j = 0; j < n; j++){
+            spent += Math.floor(base * Math.pow(1.15, j));
+          }
+        }
+      }
+
+      for (let j = 0; j < biteLvl; j++){
+        spent += Math.floor(BOOSTS.bite.baseCost * Math.pow(BOOSTS.bite.mult, j));
+      }
+      for (let j = 0; j < ovenLvl; j++){
+        spent += Math.floor(BOOSTS.oven.baseCost * Math.pow(BOOSTS.oven.mult, j));
+      }
+
+      return spent;
+    }
+
+    function loadGame(){
+      try{
+        const raw = localStorage.getItem(SAVE_KEY_V6);
+        if (raw){
+          const data = JSON.parse(raw);
+          if (data && typeof data === "object"){
+            game.bank = safeNumber(data.bank, 0);
+            game.clicks = Math.max(0, Math.floor(safeNumber(data.clicks, 0)));
+            game.biteLvl = Math.max(0, Math.floor(safeNumber(data.biteLvl, 0)));
+            game.ovenLvl = Math.max(0, Math.floor(safeNumber(data.ovenLvl, 0)));
+
+            const arr = Array.isArray(data.owned) ? data.owned : [];
+            game.owned = new Array(BUILDINGS.length).fill(0).map((_, i) => Math.max(0, Math.floor(safeNumber(arr[i], 0))));
+
+            const te = safeNumber(data.totalEarned, NaN);
+            if (Number.isFinite(te)) {
+              game.totalEarned = Math.max(te, game.bank);
+            } else {
+              game.totalEarned = Math.max(game.bank, game.bank + estimateSpentFromState(game));
+            }
+
+            if (data.admin && typeof data.admin === "object"){
+              admin.showAll = !!data.admin.showAll;
+              admin.ignoreLocks = !!data.admin.ignoreLocks;
+              admin.freeBuys = !!data.admin.freeBuys;
+            }
+            return;
+          }
+        }
+      }catch{}
+
+      try{
+        const raw5 = localStorage.getItem(SAVE_KEY_V5);
+        if (raw5){
+          const data5 = JSON.parse(raw5);
+          if (data5 && typeof data5 === "object"){
+            game.bank = safeNumber(data5.bank, 0);
+            game.clicks = Math.max(0, Math.floor(safeNumber(data5.clicks, 0)));
+            game.biteLvl = Math.max(0, Math.floor(safeNumber(data5.biteLvl, 0)));
+            game.ovenLvl = Math.max(0, Math.floor(safeNumber(data5.ovenLvl, 0)));
+
+            const arr = Array.isArray(data5.owned) ? data5.owned : [];
+            game.owned = new Array(BUILDINGS.length).fill(0).map((_, i) => Math.max(0, Math.floor(safeNumber(arr[i], 0))));
+
+            const te = safeNumber(data5.totalEarned, NaN);
+            game.totalEarned = Number.isFinite(te) ? Math.max(te, game.bank) : Math.max(game.bank, game.bank + estimateSpentFromState(game));
+
+            if (data5.admin && typeof data5.admin === "object"){
+              admin.showAll = !!data5.admin.showAll;
+              admin.ignoreLocks = !!data5.admin.ignoreLocks;
+              admin.freeBuys = !!data5.admin.freeBuys;
+            }
+            saveGame();
+            return;
+          }
+        }
+      }catch{}
+
+      const legacyKeys = [SAVE_KEY_V4, SAVE_KEY_V3, SAVE_KEY_V2];
+      for (const k of legacyKeys){
+        try{
+          const raw = localStorage.getItem(k);
+          if (!raw) continue;
+          const data = JSON.parse(raw);
+          if (!data || typeof data !== "object") continue;
+
+          game.bank = safeNumber(data.bank, 0);
+          game.clicks = Math.max(0, Math.floor(safeNumber(data.clicks, 0)));
+          game.biteLvl = Math.max(0, Math.floor(safeNumber(data.biteLvl, (safeNumber(data.perClick, 1) - 1))));
+          game.ovenLvl = Math.max(0, Math.floor(safeNumber(data.ovenLvl, 0)));
+
+          const arr = Array.isArray(data.owned) ? data.owned : [];
+          game.owned = new Array(BUILDINGS.length).fill(0).map((_, i) => Math.max(0, Math.floor(safeNumber(arr[i], 0))));
+
+          game.totalEarned = safeNumber(data.totalEarned, NaN);
+          if (!Number.isFinite(game.totalEarned)){
+            game.totalEarned = Math.max(game.bank, game.bank + estimateSpentFromState(game));
+          }
+
+          saveGame();
+          return;
+        }catch{}
+      }
+    }
+
+    function saveGame(){
+      try{
+        localStorage.setItem(SAVE_KEY_V6, JSON.stringify({
+          bank: game.bank,
+          clicks: game.clicks,
+          biteLvl: game.biteLvl,
+          ovenLvl: game.ovenLvl,
+          owned: game.owned,
+          totalEarned: game.totalEarned,
+          admin: { ...admin }
+        }));
+      }catch{}
+    }
+
+    function resetGame(){
+      game = {
+        bank: 0,
+        clicks: 0,
+        biteLvl: 0,
+        ovenLvl: 0,
+        owned: new Array(BUILDINGS.length).fill(0),
+        totalEarned: 0
+      };
+    }
+
+    const nfCompact = new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 });
+    function fmt(n){
+      const x = Math.max(0, n);
+      if (x < 1000) return Math.floor(x).toLocaleString(undefined);
+      return nfCompact.format(x);
+    }
+    function pluralKids(n){
+      return n === 1 ? "Sour Patch Kid" : "Sour Patch Kids";
+    }
+
+    function perClick(){ return 1 + game.biteLvl; }
+    function boostCps(){ return game.ovenLvl * BOOSTS.oven.cps; }
+
+    function buildingCps(){
+      let sum = 0;
+      for (let i = 0; i < BUILDINGS.length; i++){
+        sum += BUILDINGS[i].cps * game.owned[i];
+      }
+      return sum;
+    }
+    function totalCps(){ return boostCps() + buildingCps(); }
+
+    function buildingCost(i){
+      const base = BUILDINGS[i].baseCost;
+      const owned = game.owned[i];
+      return Math.floor(base * Math.pow(1.15, owned));
+    }
+    function biteCost(){
+      return Math.floor(BOOSTS.bite.baseCost * Math.pow(BOOSTS.bite.mult, game.biteLvl));
+    }
+    function ovenCost(){
+      return Math.floor(BOOSTS.oven.baseCost * Math.pow(BOOSTS.oven.mult, game.ovenLvl));
+    }
+
+    function unlockedTier(){
+      let u = 0;
+      while (u < BUILDINGS.length - 1 && game.owned[u] > 0) u++;
+      return u;
+    }
+
+    function spawnMiniCookiesAt(x, y, howMany=10){
+      const max = 26;
+      const count = Math.min(howMany, max);
+
+      for (let i = 0; i < count; i++){
+        const c = document.createElement('div');
+        c.className = 'miniCookie';
+
+        const pal = pickPalette();
+        c.style.setProperty('--kidBase', pal.base);
+        c.style.setProperty('--kidHi', pal.hi);
+
+        const sugarDots = 6 + Math.floor(Math.random() * 6);
+        for (let k = 0; k < sugarDots; k++){
+          const ch = document.createElement('span');
+          ch.className = 'miniChip';
+          ch.style.left = (10 + Math.random() * 80) + '%';
+          ch.style.top  = (10 + Math.random() * 80) + '%';
+          c.appendChild(ch);
+        }
+
+        const dx = Math.round((-180 + Math.random() * 360)) + "px";
+        const dy = Math.round((260 + Math.random() * 380)) + "px";
+        const rot = Math.round((-520 + Math.random() * 1040)) + "deg";
+        const tt = (0.85 + Math.random() * 0.85).toFixed(2) + "s";
+
+        c.style.setProperty('--dx', dx);
+        c.style.setProperty('--dy', dy);
+        c.style.setProperty('--rot', rot);
+        c.style.setProperty('--t', tt);
+
+        c.style.left = (x - 13 + (Math.random()*18 - 9)) + 'px';
+        c.style.top  = (y - 17 + (Math.random()*18 - 9)) + 'px';
+
+        document.body.appendChild(c);
+        c.addEventListener('animationend', () => c.remove());
+      }
+    }
+
+    // loop
+    let rafId = null;
+    let lastT = 0;
+    let uiThrottle = 0;
+    let saveThrottle = 0;
+
+    function startLoop(){
+      if (rafId) cancelAnimationFrame(rafId);
+      lastT = performance.now();
+      uiThrottle = 0;
+      saveThrottle = 0;
+
+      const tick = (now) => {
+        const dt = Math.min(0.06, (now - lastT) / 1000);
+        lastT = now;
+
+        const produced = totalCps() * dt;
+        if (produced > 0){
+          game.bank += produced;
+          game.totalEarned += produced;
+        }
+
+        uiThrottle += dt;
+        if (uiThrottle >= 0.12){
+          uiThrottle = 0;
+          updateGameUI();
+        }
+
+        saveThrottle += dt;
+        if (saveThrottle >= 5){
+          saveThrottle = 0;
+          saveGame();
+        }
+
+        rafId = requestAnimationFrame(tick);
+      };
+      rafId = requestAnimationFrame(tick);
+    }
+
+    function showGamePanel(){
+      const panel = document.getElementById('gamePanel');
+      const hint = document.getElementById('tapHint');
+      if (!panel) return;
+      panel.classList.add('show');
+      if (hint) hint.style.display = 'none';
+    }
+
+    let toastTimer = null;
+    function shopToast(msg){
+      const t = document.getElementById('shopToast');
+      if (!t) return;
+      t.textContent = msg;
+      t.classList.add('show');
+
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 1300);
+    }
+
+    // --- Shop UI (built once, then updated) ---
+    const ui = {
+      bank: null, click: null, cps: null, eaten: null,
+      boostBiteBtn: null, boostBiteCost: null, boostBiteLvl: null,
+      boostOvenBtn: null, boostOvenCost: null, boostOvenLvl: null,
+      buildingBtns: [], buildingCostSpans: [], buildingOwnedSpans: [], buildingLockTags: [], buildingSmallLines: [],
+      resetBtn: null,
+      openAlbumBtn: null
+    };
+
+    function buildShopOnce(){
+      ui.bank = document.getElementById('statBank');
+      ui.click = document.getElementById('statClick');
+      ui.cps = document.getElementById('statCps');
+      ui.eaten = document.getElementById('cookieCounter');
+
+      ui.boostBiteBtn = document.getElementById('btnBite');
+      ui.boostBiteCost = document.getElementById('costBite');
+      ui.boostBiteLvl = document.getElementById('lvlBite');
+
+      ui.boostOvenBtn = document.getElementById('btnOven');
+      ui.boostOvenCost = document.getElementById('costOven');
+      ui.boostOvenLvl = document.getElementById('lvlOven');
+
+      ui.buildingBtns = [];
+      ui.buildingCostSpans = [];
+      ui.buildingOwnedSpans = [];
+      ui.buildingLockTags = [];
+      ui.buildingSmallLines = [];
+
+      for (let i = 0; i < BUILDINGS.length; i++){
+        ui.buildingBtns[i] = document.getElementById(`bld_${i}`);
+        ui.buildingCostSpans[i] = document.getElementById(`bldCost_${i}`);
+        ui.buildingOwnedSpans[i] = document.getElementById(`bldOwned_${i}`);
+        ui.buildingLockTags[i] = document.getElementById(`bldLock_${i}`);
+        ui.buildingSmallLines[i] = document.getElementById(`bldLine_${i}`);
+      }
+
+      ui.resetBtn = document.getElementById('resetGameBtn');
+      ui.openAlbumBtn = document.getElementById('openAlbumBtn');
+    }
+
+    function updateShopStates(){
+      const bc = biteCost();
+      const oc = ovenCost();
+
+      ui.boostBiteCost.textContent = fmt(bc);
+      ui.boostBiteLvl.textContent = `lvl ${game.biteLvl}`;
+      ui.boostBiteBtn.classList.toggle('isDisabled', !admin.freeBuys && game.bank < bc);
+      ui.boostBiteBtn.setAttribute('aria-disabled', String(!admin.freeBuys && game.bank < bc));
+
+      ui.boostOvenCost.textContent = fmt(oc);
+      ui.boostOvenLvl.textContent = `lvl ${game.ovenLvl}`;
+      ui.boostOvenBtn.classList.toggle('isDisabled', !admin.freeBuys && game.bank < oc);
+      ui.boostOvenBtn.setAttribute('aria-disabled', String(!admin.freeBuys && game.bank < oc));
+
+      const u = unlockedTier();
+      const showMax = admin.showAll ? (BUILDINGS.length - 1) : Math.min(BUILDINGS.length - 1, u + 1);
+
+      for (let i = 0; i < BUILDINGS.length; i++){
+        const btn = ui.buildingBtns[i];
+        const costSpan = ui.buildingCostSpans[i];
+        const ownedSpan = ui.buildingOwnedSpans[i];
+        const lockTag = ui.buildingLockTags[i];
+        const line = ui.buildingSmallLines[i];
+
+        const visible = i <= showMax;
+        btn.classList.toggle('hidden', !visible);
+        if (!visible) continue;
+
+        const locked = (!admin.ignoreLocks) && (i > u);
+        const cost = buildingCost(i);
+        const affordable = admin.freeBuys ? true : (game.bank >= cost);
+
+        costSpan.textContent = fmt(cost);
+
+        if (locked){
+          lockTag.classList.remove('hidden');
+          ownedSpan.textContent = "???";
+          btn.classList.add('isDisabled');
+          btn.setAttribute('aria-disabled', "true");
+
+          const prevName = BUILDINGS[Math.max(0, i - 1)].name;
+          line.innerHTML = `Unlock by buying <strong>1× ${prevName}</strong> • Produces <strong>+${BUILDINGS[i].cps.toLocaleString(undefined)} kids/sec</strong>`;
+        } else {
+          lockTag.classList.add('hidden');
+          ownedSpan.textContent = `x${game.owned[i]}`;
+          btn.classList.toggle('isDisabled', !affordable);
+          btn.setAttribute('aria-disabled', String(!affordable));
+
+          line.innerHTML = `Produces <strong>+${BUILDINGS[i].cps.toLocaleString(undefined)} kids/sec</strong> each`;
+        }
+      }
+    }
+
+    function updateGameUI(){
+      if (!ui.bank) return;
+      ui.bank.textContent = fmt(game.bank);
+      ui.click.textContent = `${perClick().toLocaleString(undefined)} / tap`;
+      ui.cps.textContent = `${totalCps().toFixed(1)} kids/sec`;
+
+      const eaten = Math.floor(game.totalEarned);
+      ui.eaten.textContent = `you’ve devoured ${eaten.toLocaleString(undefined)} ${pluralKids(eaten)}`;
+
+      updateShopStates();
+    }
+
+    function wireAdminPanel(){
+      const overlay = document.getElementById('adminOverlay');
+      const close = document.getElementById('adminClose');
+      const opener = document.getElementById('adminCornerBtn');
+
+      const openAdmin = () => {
+        overlay.classList.add('show');
+        overlay.setAttribute('aria-hidden', 'false');
+      };
+      const closeAdmin = () => {
+        overlay.classList.remove('show');
+        overlay.setAttribute('aria-hidden', 'true');
+      };
+
+      opener.addEventListener('click', openAdmin);
+
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && overlay.classList.contains('show')) closeAdmin();
+        if (e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+          e.preventDefault();
+          openAdmin();
+        }
+      });
+      close.addEventListener('click', closeAdmin);
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) closeAdmin(); });
+
+      const add = (amt) => {
+        const a = Math.max(0, amt);
+        game.bank += a;
+        game.totalEarned += a;
+        updateGameUI();
+        saveGame();
+        shopToast(`admin: +${fmt(a)} kids`);
+      };
+
+      const parseNum = (s) => {
+        const cleaned = String(s || "").replace(/[, _]/g, "").trim();
+        const n = Number(cleaned);
+        return Number.isFinite(n) ? n : NaN;
+      };
+
+      document.getElementById('aAdd1k').addEventListener('click', () => add(1_000));
+      document.getElementById('aAdd1m').addEventListener('click', () => add(1_000_000));
+      document.getElementById('aAdd1b').addEventListener('click', () => add(1_000_000_000));
+
+      document.getElementById('aApplyStash').addEventListener('click', () => {
+        const v = parseNum(document.getElementById('aSetStash').value);
+        if (!Number.isFinite(v) || v < 0) { shopToast("admin: invalid number."); return; }
+        const delta = Math.max(0, v - game.bank);
+        game.bank = v;
+        game.totalEarned += delta;
+        updateGameUI();
+        saveGame();
+        shopToast(`admin: stash set to ${fmt(v)}`);
+      });
+
+      const aShowAll = document.getElementById('aShowAll');
+      const aIgnoreLocks = document.getElementById('aIgnoreLocks');
+      const aFreeBuys = document.getElementById('aFreeBuys');
+
+      aShowAll.checked = !!admin.showAll;
+      aIgnoreLocks.checked = !!admin.ignoreLocks;
+      aFreeBuys.checked = !!admin.freeBuys;
+
+      aShowAll.addEventListener('change', () => { admin.showAll = aShowAll.checked; updateGameUI(); saveGame(); });
+      aIgnoreLocks.addEventListener('change', () => { admin.ignoreLocks = aIgnoreLocks.checked; updateGameUI(); saveGame(); });
+      aFreeBuys.addEventListener('change', () => { admin.freeBuys = aFreeBuys.checked; updateGameUI(); saveGame(); });
+
+      document.getElementById('aOwn1Each').addEventListener('click', () => {
+        for (let i = 0; i < BUILDINGS.length; i++) game.owned[i] = Math.max(game.owned[i], 1);
+        updateGameUI(); saveGame();
+        shopToast("admin: owned 1× each.");
+      });
+
+      document.getElementById('aOwn50Each').addEventListener('click', () => {
+        for (let i = 0; i < BUILDINGS.length; i++) game.owned[i] = Math.max(game.owned[i], 50);
+        updateGameUI(); saveGame();
+        shopToast("admin: owned 50× each.");
+      });
+
+      document.getElementById('aMaxBoosts').addEventListener('click', () => {
+        game.biteLvl = Math.max(game.biteLvl, 50);
+        game.ovenLvl = Math.max(game.ovenLvl, 50);
+        updateGameUI(); saveGame();
+        shopToast("admin: boosts maxed.");
+      });
+
+      const aJson = document.getElementById('aJson');
+
+      document.getElementById('aExport').addEventListener('click', async () => {
+        const payload = JSON.stringify({ game, admin }, null, 2);
+        aJson.value = payload;
+        try{
+          await navigator.clipboard.writeText(payload);
+          shopToast("admin: save copied.");
+        }catch{
+          shopToast("admin: couldn't auto-copy (still filled textarea).");
+        }
+      });
+
+      document.getElementById('aImport').addEventListener('click', () => {
+        try{
+          const obj = JSON.parse(aJson.value || "{}");
+          if (obj.game && typeof obj.game === "object"){
+            const g = obj.game;
+            game.bank = safeNumber(g.bank, 0);
+            game.clicks = Math.max(0, Math.floor(safeNumber(g.clicks, 0)));
+            game.biteLvl = Math.max(0, Math.floor(safeNumber(g.biteLvl, 0)));
+            game.ovenLvl = Math.max(0, Math.floor(safeNumber(g.ovenLvl, 0)));
+            const arr = Array.isArray(g.owned) ? g.owned : [];
+            game.owned = new Array(BUILDINGS.length).fill(0).map((_, i) => Math.max(0, Math.floor(safeNumber(arr[i], 0))));
+            game.totalEarned = Math.max(safeNumber(g.totalEarned, game.bank), game.bank);
+          }
+          if (obj.admin && typeof obj.admin === "object"){
+            admin.showAll = !!obj.admin.showAll;
+            admin.ignoreLocks = !!obj.admin.ignoreLocks;
+            admin.freeBuys = !!obj.admin.freeBuys;
+            aShowAll.checked = admin.showAll;
+            aIgnoreLocks.checked = admin.ignoreLocks;
+            aFreeBuys.checked = admin.freeBuys;
+          }
+          updateGameUI(); saveGame();
+          shopToast("admin: imported.");
+        }catch{
+          shopToast("admin: invalid JSON.");
+        }
+      });
+
+      document.getElementById('aWipe').addEventListener('click', () => {
+        const ok = confirm("Wipe Sour Patch game save?\n\nThis deletes the save on this device.");
+        if (!ok) return;
+        try{
+          localStorage.removeItem(SAVE_KEY_V6);
+          localStorage.removeItem(SAVE_KEY_V5);
+        }catch{}
+        resetGame();
+        updateGameUI();
+        saveGame();
+        shopToast("admin: wiped.");
+      });
+    }
+
+    /* =========================
+       Album auto-loader + sphere orbit
+       ========================= */
+    const ALBUM_DIR = "album/";
+    const ALBUM_MAX = 140;
+    const ALBUM_EXTS = ["jpg","JPG","png","PNG","jpeg","JPEG","webp","WEBP"];
+
+    const album = {
+      inited: false,
+      running: false,
+      stage: null,
+      thumbs: [],
+      basePts: [],
+      w: 0, h: 0,
+      t0: 0,
+      lastNow: 0,
+      raf: 0,
+      spotlightIdx: -1,
+      spotlightUntil: 0,
+      nextSpotlightAt: 0
+    };
+
+    function albumRelayout(){
+      if (!album.stage) return;
+      const r = album.stage.getBoundingClientRect();
+      album.w = r.width;
+      album.h = r.height;
+    }
+
+    function canLoadImage(url){
+      return new Promise((resolve) => {
+        const img = new Image();
+        let done = false;
+        const finish = (ok) => {
+          if (done) return;
+          done = true;
+          img.onload = null;
+          img.onerror = null;
+          resolve(ok);
+        };
+        const t = setTimeout(() => finish(false), 2500);
+        img.onload = () => { clearTimeout(t); finish(true); };
+        img.onerror = () => { clearTimeout(t); finish(false); };
+        img.src = url;
+      });
+    }
+
+    async function findUrlForIndex(i){
+      const name = String(i).padStart(3, "0");
+      for (const ext of ALBUM_EXTS){
+        const url = `${ALBUM_DIR}${name}.${ext}`;
+        // eslint-disable-next-line no-await-in-loop
+        const ok = await canLoadImage(url);
+        if (ok) return url;
+      }
+      return null;
+    }
+
+    async function discoverAlbumUrls(){
+      const urls = [];
+      for (let i = 1; i <= ALBUM_MAX; i++){
+        // eslint-disable-next-line no-await-in-loop
+        const u = await findUrlForIndex(i);
+        if (u) urls.push(u);
+      }
+      return urls;
+    }
+
+    function fibonacciSphere(n){
+      const pts = [];
+      const ga = Math.PI * (3 - Math.sqrt(5));
+      for (let i = 0; i < n; i++){
+        const y = 1 - (2 * (i + 0.5)) / n;
+        const r = Math.sqrt(Math.max(0, 1 - y*y));
+        const theta = ga * i;
+        const x = Math.cos(theta) * r;
+        const z = Math.sin(theta) * r;
+        pts.push({ x, y, z });
+      }
+      return pts;
+    }
+
+    function initAlbum(urls){
+      album.stage = document.getElementById("albumStage");
+      if (!album.stage) return;
+
+      album.stage.innerHTML = "";
+      album.thumbs = [];
+      album.basePts = fibonacciSphere(urls.length);
+
+      const bigCount = Math.min(7, Math.max(4, Math.floor(urls.length * 0.10)));
+      const bigSet = new Set();
+      while (bigSet.size < bigCount && urls.length){
+        bigSet.add(Math.floor(Math.random() * urls.length));
+      }
+
+      for (let i = 0; i < urls.length; i++){
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "thumb";
+        btn.setAttribute("aria-label", `photo ${i+1}`);
+
+        const img = document.createElement("img");
+        img.loading = "lazy";
+        img.decoding = "async";
+        img.alt = "";
+        img.src = urls[i];
+
+        btn.appendChild(img);
+        album.stage.appendChild(btn);
+
+        const entry = {
+          btn,
+          img,
+          big: bigSet.has(i),
+
+          // smooth movement
+          posX: NaN,
+          posY: NaN,
+
+          // inflate stack + decay
+          inflate: 0,
+          targetInflate: 0,
+          decayAt: 0
+        };
+        album.thumbs.push(entry);
+
+        // CLICK: stack inflate; smoothly decay back after 10 seconds
+        btn.addEventListener("click", () => {
+          entry.targetInflate = Math.min(1.25, entry.targetInflate + 0.16);
+          entry.decayAt = performance.now() + 10000;
+        });
+      }
+
+      albumRelayout();
+      album.inited = true;
+    }
+
+    function startAlbumOrbit(){
+      if (!album.inited || album.running) return;
+      album.running = true;
+
+      album.t0 = performance.now();
+      album.lastNow = album.t0;
+      album.nextSpotlightAt = album.t0 + 7000;
+
+      const tick = (now) => {
+        if (!album.running) return;
+
+        const dt = Math.min(0.05, Math.max(0.001, (now - album.lastNow) / 1000));
+        album.lastNow = now;
+
+        albumRelayout();
+
+        // Wider orbit, less "center clumping"
+        const R = Math.min(720, Math.max(320, Math.min(album.w, album.h) * 0.70));
+        const cam = 6.2;              // more “orthographic”, less center clump
+        const cx = album.w / 2;
+        const cy = album.h / 2;
+        const edgePad = 18;
+
+        if (now >= album.nextSpotlightAt && album.thumbs.length){
+          album.spotlightIdx = Math.floor(Math.random() * album.thumbs.length);
+          album.spotlightUntil = now + 3200;
+          album.nextSpotlightAt = now + (6500 + Math.random() * 2500);
+        }
+
+        const t = (now - album.t0) / 1000;
+
+        // calm rotation
+        const ry = t * 0.050;
+        const rx = t * 0.032;
+
+        const cosy = Math.cos(ry), siny = Math.sin(ry);
+        const cosx = Math.cos(rx), sinx = Math.sin(rx);
+
+        const projected = [];
+        const THUMB_BASE = 96;
+
+        for (let i = 0; i < album.basePts.length; i++){
+          const p0 = album.basePts[i];
+
+          // rotate around Y
+          let x1 = p0.x * cosy + p0.z * siny;
+          let z1 = -p0.x * siny + p0.z * cosy;
+          let y1 = p0.y;
+
+          // rotate around X
+          let y2 = y1 * cosx - z1 * sinx;
+          let z2 = y1 * sinx + z1 * cosx;
+          let x2 = x1;
+
+          const entry = album.thumbs[i];
+          const isSpot = (i === album.spotlightIdx && now < album.spotlightUntil);
+          const big = entry?.big;
+
+          // remove center pull; gently push special ones outward instead
+          if (big || isSpot){
+            const pushOut = (big ? 0.06 : 0) + (isSpot ? 0.10 : 0);
+            x2 *= (1 + pushOut);
+            y2 *= (1 + pushOut);
+          }
+
+          const depth = cam - z2;
+          let px = cx + (x2 * R) / depth;
+          let py = cy + (y2 * R) / depth;
+
+          // global spread bias (less center concentration)
+          const spread = 3.00;          // was ~1.16
+          px = cx + (px - cx) * spread;
+          py = cy + (py - cy) * spread;
+
+
+          const depth01 = (z2 + 1) / 2;
+          let s = 0.54 + depth01 * 0.60;
+          s *= (big ? 1.18 : 1.00);
+          if (isSpot) s *= 1.14;
+
+          // inflate: decay targetInflate to 0 after 10s, smoothly
+          if (entry){
+            if (now > entry.decayAt && entry.targetInflate > 0){
+              const decayAlpha = 1 - Math.exp(-dt * 1.6);
+              entry.targetInflate += (0 - entry.targetInflate) * decayAlpha;
+              if (entry.targetInflate < 0.002) entry.targetInflate = 0;
+            }
+
+            const inflAlpha = 1 - Math.exp(-dt * 10);
+            entry.inflate += (entry.targetInflate - entry.inflate) * inflAlpha;
+            s *= (1 + entry.inflate);
+          }
+
+          const size = Math.max(56, THUMB_BASE * s);
+
+          // clamp target inside bounds
+          const r = size * 0.5;
+          px = Math.min(album.w - edgePad - r, Math.max(edgePad + r, px));
+          py = Math.min(album.h - edgePad - r, Math.max(edgePad + r, py));
+
+          projected.push({ i, x: px, y: py, z: z2, size, isSpot });
+        }
+
+        // depth sort (near on top)
+        projected.sort((a,b) => a.z - b.z);
+
+        // SOFT overlap relaxation (calm)
+        const gap = 22;
+        const softness = 0.08;
+        const maxStep = 4.5;
+
+        for (let iter = 0; iter < 2; iter++){
+          for (let a = 0; a < projected.length; a++){
+            for (let b = a + 1; b < projected.length; b++){
+              const A = projected[a], B = projected[b];
+
+              const dx = A.x - B.x;
+              const dy = A.y - B.y;
+              const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+
+              const rA = A.size * 0.5;
+              const rB = B.size * 0.5;
+              const minDist = rA + rB + gap;
+
+              const overlap = minDist - dist;
+              if (overlap > 0){
+                const push = (overlap / minDist) * softness;
+
+                let px = dx * push;
+                let py = dy * push;
+
+                const m = Math.sqrt(px*px + py*py) || 1;
+                if (m > maxStep){
+                  px = (px / m) * maxStep;
+                  py = (py / m) * maxStep;
+                }
+
+                const wA = A.isSpot ? 0.45 : 1.0;
+                const wB = B.isSpot ? 0.45 : 1.0;
+
+                A.x += px * wA; A.y += py * wA;
+                B.x -= px * wB; B.y -= py * wB;
+
+                const AxMin = edgePad + rA, AxMax = album.w - edgePad - rA;
+                const AyMin = edgePad + rA, AyMax = album.h - edgePad - rA;
+                const BxMin = edgePad + rB, BxMax = album.w - edgePad - rB;
+                const ByMin = edgePad + rB, ByMax = album.h - edgePad - rB;
+
+                A.x = Math.min(AxMax, Math.max(AxMin, A.x));
+                A.y = Math.min(AyMax, Math.max(AyMin, A.y));
+                B.x = Math.min(BxMax, Math.max(BxMin, B.x));
+                B.y = Math.min(ByMax, Math.max(ByMin, B.y));
+              }
+            }
+          }
+        }
+
+        // Apply with inertia (smooth motion)
+        const followAlpha = 1 - Math.exp(-dt * 9);
+
+        for (let order = 0; order < projected.length; order++){
+          const p = projected[order];
+          const entry = album.thumbs[p.i];
+          if (!entry) continue;
+
+          if (!Number.isFinite(entry.posX)){
+            entry.posX = p.x;
+            entry.posY = p.y;
+          }
+
+          entry.posX += (p.x - entry.posX) * followAlpha;
+          entry.posY += (p.y - entry.posY) * followAlpha;
+
+          entry.btn.style.zIndex = String(100 + order);
+          entry.btn.style.opacity = String(0.60 + Math.max(0, Math.min(1, (p.z + 1) / 2)) * 0.40);
+
+          const scale = (p.size / THUMB_BASE);
+          entry.btn.classList.toggle('hq', scale > 1.12);
+
+          entry.btn.style.transform =
+            `translate3d(${entry.posX}px, ${entry.posY}px, 0) translate(-50%, -50%) scale(${scale.toFixed(4)})`;
+        }
+
+        album.raf = requestAnimationFrame(tick);
+      };
+
+      album.raf = requestAnimationFrame(tick);
+    }
+
+    async function showAlbum(){
+      const wrap = document.getElementById("albumWrap");
+      if (!wrap) return;
+
+      wrap.classList.remove("hidden");
+
+      if (!album.inited){
+        shopToast("loading album…");
+
+        const urls = await discoverAlbumUrls();
+
+        if (!urls.length){
+          shopToast("no images found in /album (jpg/png/webp).");
+          return;
+        }
+
+        initAlbum(urls);
+        shopToast(`loaded ${urls.length} pics.`);
+      }
+
+      startAlbumOrbit();
+
+      setTimeout(() => {
+        wrap.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 80);
+    }
+
+    function wireGame(){
+      const kid = document.getElementById('cookieBig');
+      const shopRoot = document.getElementById('shopRoot');
+      if (!kid || !shopRoot) return;
+
+      buildShopOnce();
+
+      const pal = pickPalette();
+      kid.style.setProperty('--kidBase', pal.base);
+      kid.style.setProperty('--kidHi', pal.hi);
+
+      wireAdminPanel();
+
+      ui.openAlbumBtn.addEventListener('click', () => {
+        showAlbum();
+      });
+
+      const clickKid = (clientX, clientY) => {
+        const wasZero = game.clicks === 0;
+
+        game.clicks += 1;
+        const gain = perClick();
+        game.bank += gain;
+        game.totalEarned += gain;
+
+        if (wasZero) showGamePanel();
+
+        if (typeof clientX === "number" && typeof clientY === "number"){
+          const burst = Math.min(10 + Math.floor(gain * 0.7), 26);
+          spawnMiniCookiesAt(clientX, clientY, burst);
+        } else {
+          const r = kid.getBoundingClientRect();
+          spawnMiniCookiesAt(r.left + r.width/2, r.top + r.height/2, 12);
+        }
+
+        updateGameUI();
+        saveGame();
+      };
+
+      kid.addEventListener('click', (e) => clickKid(e.clientX, e.clientY));
+      kid.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          clickKid(null, null);
+        }
+      });
+
+      shopRoot.addEventListener('click', (e) => {
+        const btn = e.target.closest('button.shopBtn');
+        if (!btn) return;
+
+        const kind = btn.dataset.kind;
+
+        if (kind === "bite"){
+          const cost = admin.freeBuys ? 0 : biteCost();
+          if (!admin.freeBuys && game.bank < cost){
+            shopToast(`need ${fmt(cost - game.bank)} more kids for that.`);
+            return;
+          }
+          game.bank -= cost;
+          game.biteLvl += 1;
+          updateGameUI();
+          saveGame();
+          return;
+        }
+
+        if (kind === "oven"){
+          const cost = admin.freeBuys ? 0 : ovenCost();
+          if (!admin.freeBuys && game.bank < cost){
+            shopToast(`need ${fmt(cost - game.bank)} more kids for that.`);
+            return;
+          }
+          game.bank -= cost;
+          game.ovenLvl += 1;
+          updateGameUI();
+          saveGame();
+          return;
+        }
+
+        if (kind === "building"){
+          const i = Number(btn.dataset.i);
+          if (!Number.isFinite(i)) return;
+
+          const u = unlockedTier();
+          if (!admin.ignoreLocks && i > u){
+            const prev = BUILDINGS[i - 1]?.name || "the previous thing";
+            shopToast(`locked. buy 1× ${prev} first.`);
+            return;
+          }
+
+          const cost = admin.freeBuys ? 0 : buildingCost(i);
+          if (!admin.freeBuys && game.bank < cost){
+            shopToast(`need ${fmt(cost - game.bank)} more kids.`);
+            return;
+          }
+
+          game.bank -= cost;
+          game.owned[i] += 1;
+
+          updateGameUI();
+          saveGame();
+          return;
+        }
+      });
+
+      ui.resetBtn.addEventListener('click', () => {
+        const ok = confirm("Reset Sour Patch game?\n\nThis will wipe your stash + upgrades on this device.");
+        if (!ok) return;
+
+        try{
+          localStorage.removeItem(SAVE_KEY_V6);
+          localStorage.removeItem(SAVE_KEY_V5);
+          localStorage.removeItem(SAVE_KEY_V4);
+          localStorage.removeItem(SAVE_KEY_V3);
+          localStorage.removeItem(SAVE_KEY_V2);
+        }catch{}
+
+        resetGame();
+        updateGameUI();
+        shopToast("reset done.");
+        saveGame();
+      });
+
+      if (game.clicks > 0) showGamePanel();
+      updateGameUI();
+      startLoop();
+    }
+
+    function mountCookieGame(){
+      reply.innerHTML = `
+        <div>YOUPiiiiiiiii!!</div>
+
+        <div class="cookieWrap">
+          <div class="cookieStage">
+            <span class="heart" style="--x:-160; --y:-120; --s:1.10; --d:0.00"></span>
+            <span class="heart" style="--x:  10; --y:-155; --s:0.95; --d:0.15"></span>
+            <span class="heart" style="--x: 170; --y:-115; --s:1.05; --d:0.25"></span>
+            <span class="heart" style="--x:-195; --y: -10; --s:0.90; --d:0.35"></span>
+            <span class="heart" style="--x: 205; --y: -20; --s:0.92; --d:0.45"></span>
+            <span class="heart" style="--x:-165; --y: 110; --s:1.00; --d:0.55"></span>
+            <span class="heart" style="--x:  10; --y: 185; --s:1.10; --d:0.65"></span>
+            <span class="heart" style="--x: 170; --y: 120; --s:0.98; --d:0.75"></span>
+
+            <div class="cookieBig" id="cookieBig" role="button" tabindex="0" aria-label="sour patch kid" title="tap me">
+              <span class="kidEye left"></span>
+              <span class="kidEye right"></span>
+              <span class="kidMouth"></span>
+            </div>
+          </div>
+
+          <div class="cookieMsg">
+            <strong>here’s a sour patch kid (YES I PROMISE YOU THATS A SOUR PATCH KID... I TRIED OKAY)</strong>
+            (and lots of hugs when we see each other)
+          </div>
+
+          <div class="tapHint" id="tapHint">tap the kid.</div>
+
+          <div class="gamePanel" id="gamePanel">
+            <div class="statsGrid" aria-live="polite">
+              <div class="statCard">
+                <div class="statLabel">kid stash</div>
+                <div class="statValue" id="statBank">0</div>
+              </div>
+              <div class="statCard">
+                <div class="statLabel">chew power</div>
+                <div class="statValue" id="statClick">1 / tap</div>
+              </div>
+              <div class="statCard">
+                <div class="statLabel">sour flow</div>
+                <div class="statValue" id="statCps">0.0 kids/sec</div>
+              </div>
+            </div>
+
+            <div class="cookieCounter" id="cookieCounter">you’ve devoured 0 Sour Patch Kids</div>
+
+            <div class="shop" id="shopRoot">
+              <div class="shopTop">
+                <div class="shopTitle">upgrades</div>
+                <button class="actionBtnSmall" id="resetGameBtn" type="button">reset</button>
+              </div>
+
+              <div class="shopGrid">
+                <button class="shopBtn" id="btnBite" data-kind="bite" type="button">
+                  <div class="upRow">
+                    <div>${BOOSTS.bite.name}</div>
+                    <span class="ownedPill" id="lvlBite">lvl 0</span>
+                  </div>
+                  <small>${BOOSTS.bite.desc}<br>Cost: <strong><span id="costBite">25</span></strong> kids</small>
+                </button>
+
+                <button class="shopBtn" id="btnOven" data-kind="oven" type="button">
+                  <div class="upRow">
+                    <div>${BOOSTS.oven.name}</div>
+                    <span class="ownedPill" id="lvlOven">lvl 0</span>
+                  </div>
+                  <small>${BOOSTS.oven.desc}<br>Cost: <strong><span id="costOven">40</span></strong> kids</small>
+                </button>
+              </div>
+
+              <div class="shopTop" style="margin-top:12px;">
+                <div class="shopTitle">buildings (progressive)</div>
+              </div>
+
+              <div class="shopGrid" id="buildingGrid">
+                ${BUILDINGS.map((b, i) => `
+                  <button class="shopBtn" id="bld_${i}" data-kind="building" data-i="${i}" type="button">
+                    <div class="upRow">
+                      <div>${b.name}<span class="tagLocked hidden" id="bldLock_${i}">locked</span></div>
+                      <span class="ownedPill" id="bldOwned_${i}">x0</span>
+                    </div>
+                    <small>
+                      ${b.desc}<br>
+                      Cost: <strong><span id="bldCost_${i}">${b.baseCost}</span></strong> kids •
+                      <span id="bldLine_${i}">Produces <strong>+${b.cps.toLocaleString(undefined)} kids/sec</strong></span>
+                    </small>
+                  </button>
+                `).join("")}
+              </div>
+
+              <div class="shopToast" id="shopToast"></div>
+            </div>
+
+            <div class="cbaWrap">
+              <div class="cbaText">if you cba to play click here</div>
+              <button class="actionBtnSmall cbaBtn" id="openAlbumBtn" type="button">clickkk</button>
+            </div>
+
+            <div class="albumWrap hidden" id="albumWrap">
+              <div class="albumBanner">
+                <div class="sparkRow" aria-hidden="true">
+                  <span class="sparkHeart" style="left:8%; top:28%; animation-delay:0.0s;"><i></i></span>
+                  <span class="sparkHeart" style="left:16%; top:70%; animation-delay:0.2s;"><i></i></span>
+                  <span class="sparkHeart" style="left:28%; top:20%; animation-delay:0.35s;"><i></i></span>
+                  <span class="sparkHeart" style="left:38%; top:78%; animation-delay:0.1s;"><i></i></span>
+                  <span class="sparkHeart" style="left:52%; top:22%; animation-delay:0.28s;"><i></i></span>
+                  <span class="sparkHeart" style="left:64%; top:72%; animation-delay:0.4s;"><i></i></span>
+                  <span class="sparkHeart" style="left:78%; top:26%; animation-delay:0.18s;"><i></i></span>
+                  <span class="sparkHeart" style="left:88%; top:66%; animation-delay:0.33s;"><i></i></span>
+                </div>
+                <div class="albumText">I loved all of our moments</div>
+              </div>
+
+              <div class="albumStage" id="albumStage" aria-label="floating photo album"></div>
+
+              <div class="albumHint">You can click a picture to inflate it. after ~10s it’ll go back to normal (I have too many fav pictures to put all of them here but these are already so cute!!).</div>
+            </div>
+
+          </div>
+        </div>
+      `;
+
+      loadGame();
+      wireGame();
+    }
+
+    // ====== yes/no buttons ======
+    document.getElementById('yes').addEventListener('click', () => {
+      reply.classList.add('show');
+      mountCookieGame();
+      noClicks = 0;
+      clearBears();
+    });
+
+    document.getElementById('no').addEventListener('click', () => {
+      reply.classList.add('show');
+      reply.textContent = "so you think im ugly and fat...";
+      noClicks += 1;
+      const target = desiredTotal(noClicks);
+      spawnUntilTotal(target);
+    });
+
+    // ====== PDF modal wiring ======
+    const overlay = document.getElementById('latexOverlay');
+    const latexSource = document.getElementById('latexSource');
+    const pdfPath = "Lucie_s_theorem.pdf";
+
+    function openLatex(){
+      overlay.classList.add('show');
+      overlay.setAttribute('aria-hidden', 'false');
+    }
+    function closeLatex(){
+      overlay.classList.remove('show');
+      overlay.setAttribute('aria-hidden', 'true');
+    }
+
+    const proofLink = document.getElementById('proofLink');
+    if (proofLink){
+      proofLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        openLatex();
+      });
+    }
+
+    document.getElementById('closeLatex').addEventListener('click', closeLatex);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeLatex(); });
+    window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLatex(); });
+
+    document.getElementById('openPdfTab').addEventListener('click', () => {
+      window.open(pdfPath, "_blank", "noopener");
+    });
+
+    document.getElementById('downloadPdf').addEventListener('click', () => {
+      const a = document.createElement('a');
+      a.href = pdfPath;
+      a.download = "Lucie_s_theorem.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    });
+
+    document.getElementById('copyLatex').addEventListener('click', async () => {
+      const txt = latexSource.textContent;
+      try{
+        await navigator.clipboard.writeText(txt);
+      }catch{
+        const ta = document.createElement('textarea');
+        ta.value = txt;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+      }
+    });
+
+    document.getElementById('downloadLatex').addEventListener('click', () => {
+      const txt = latexSource.textContent;
+      const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = "lucies-theorem.tex";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>
