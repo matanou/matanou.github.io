@@ -707,7 +707,6 @@
       text-align:center;
     }
 
-    /* UPDATED: bigger base thumbs, better clarity when scaled */
     .thumb{
       position:absolute;
       left: 0;
@@ -720,9 +719,6 @@
       background: #fff;
       padding: 0;
       cursor: pointer;
-
-      /* IMPORTANT: remove the old "transform: translate(-50%,-50%)" here */
-      /* JS will set the full transform each frame */
 
       box-shadow: 0 16px 28px rgba(0,0,0,0.10), 0 10px 22px rgba(255,47,134,0.10);
       overflow:hidden;
@@ -758,7 +754,6 @@
       pointer-events:none;
       opacity: 0.9;
     }
-    /* "Quality boost" when scaled up (perceived crispness) */
     .thumb.hq img{
       filter: saturate(1.10) contrast(1.06);
       image-rendering: -webkit-optimize-contrast;
@@ -1379,11 +1374,6 @@
       bearEls.clear();
     }
 
-    window.addEventListener('resize', () => {
-      for (const el of Array.from(bearEls)) placeBear(el);
-      if (album.inited) albumRelayout();
-    });
-
     // ====== Sour Patch Kids idle game ======
     const SAVE_KEY_V6 = "lucie_spk_idle_v6";
     const SAVE_KEY_V5 = "lucie_spk_idle_v5";
@@ -1967,11 +1957,26 @@
     }
 
     /* =========================
-       Album auto-loader + sphere orbit
-       ========================= */
+       Album loader (FAST) + sphere orbit
+       =========================
+       IMPORTANT:
+       - Put your images in /album/
+       - Name them 001.jpg, 002.jpg, ... exactly (case sensitive)
+       - Set ALBUM_COUNT to your last number
+       - Set ALBUM_EXT to the exact extension/case ("jpg" vs "JPG")
+    */
     const ALBUM_DIR = "album/";
-    const ALBUM_MAX = 140;
-    const ALBUM_EXTS = ["jpg","JPG","png","PNG","jpeg","JPEG","webp","WEBP"];
+    const ALBUM_COUNT = 24;   // <<< CHANGE THIS to your last image number
+    const ALBUM_EXT = "jpg";  // <<< CHANGE THIS if yours are "JPG" / "png" etc (case matters!)
+
+    function buildAlbumUrls(){
+      const urls = [];
+      for (let i = 1; i <= ALBUM_COUNT; i++){
+        const name = String(i).padStart(3, "0");
+        urls.push(`${ALBUM_DIR}${name}.${ALBUM_EXT}`);
+      }
+      return urls;
+    }
 
     const album = {
       inited: false,
@@ -1993,45 +1998,6 @@
       const r = album.stage.getBoundingClientRect();
       album.w = r.width;
       album.h = r.height;
-    }
-
-    function canLoadImage(url){
-      return new Promise((resolve) => {
-        const img = new Image();
-        let done = false;
-        const finish = (ok) => {
-          if (done) return;
-          done = true;
-          img.onload = null;
-          img.onerror = null;
-          resolve(ok);
-        };
-        const t = setTimeout(() => finish(false), 2500);
-        img.onload = () => { clearTimeout(t); finish(true); };
-        img.onerror = () => { clearTimeout(t); finish(false); };
-        img.src = url;
-      });
-    }
-
-    async function findUrlForIndex(i){
-      const name = String(i).padStart(3, "0");
-      for (const ext of ALBUM_EXTS){
-        const url = `${ALBUM_DIR}${name}.${ext}`;
-        // eslint-disable-next-line no-await-in-loop
-        const ok = await canLoadImage(url);
-        if (ok) return url;
-      }
-      return null;
-    }
-
-    async function discoverAlbumUrls(){
-      const urls = [];
-      for (let i = 1; i <= ALBUM_MAX; i++){
-        // eslint-disable-next-line no-await-in-loop
-        const u = await findUrlForIndex(i);
-        if (u) urls.push(u);
-      }
-      return urls;
     }
 
     function fibonacciSphere(n){
@@ -2062,6 +2028,8 @@
         bigSet.add(Math.floor(Math.random() * urls.length));
       }
 
+      let firstErrorShown = false;
+
       for (let i = 0; i < urls.length; i++){
         const btn = document.createElement("button");
         btn.type = "button";
@@ -2074,6 +2042,12 @@
         img.alt = "";
         img.src = urls[i];
 
+        img.onerror = () => {
+          if (firstErrorShown) return;
+          firstErrorShown = true;
+          shopToast(`album image not found. check ALBUM_EXT ("${ALBUM_EXT}") + filenames (001.${ALBUM_EXT})`);
+        };
+
         btn.appendChild(img);
         album.stage.appendChild(btn);
 
@@ -2081,19 +2055,14 @@
           btn,
           img,
           big: bigSet.has(i),
-
-          // smooth movement
           posX: NaN,
           posY: NaN,
-
-          // inflate stack + decay
           inflate: 0,
           targetInflate: 0,
           decayAt: 0
         };
         album.thumbs.push(entry);
 
-        // CLICK: stack inflate; smoothly decay back after 10 seconds
         btn.addEventListener("click", () => {
           entry.targetInflate = Math.min(1.25, entry.targetInflate + 0.16);
           entry.decayAt = performance.now() + 10000;
@@ -2120,9 +2089,8 @@
 
         albumRelayout();
 
-        // Wider orbit, less "center clumping"
         const R = Math.min(720, Math.max(320, Math.min(album.w, album.h) * 0.70));
-        const cam = 6.2;              // more “orthographic”, less center clump
+        const cam = 6.2;
         const cx = album.w / 2;
         const cy = album.h / 2;
         const edgePad = 18;
@@ -2134,8 +2102,6 @@
         }
 
         const t = (now - album.t0) / 1000;
-
-        // calm rotation
         const ry = t * 0.050;
         const rx = t * 0.032;
 
@@ -2148,12 +2114,10 @@
         for (let i = 0; i < album.basePts.length; i++){
           const p0 = album.basePts[i];
 
-          // rotate around Y
           let x1 = p0.x * cosy + p0.z * siny;
           let z1 = -p0.x * siny + p0.z * cosy;
           let y1 = p0.y;
 
-          // rotate around X
           let y2 = y1 * cosx - z1 * sinx;
           let z2 = y1 * sinx + z1 * cosx;
           let x2 = x1;
@@ -2162,7 +2126,6 @@
           const isSpot = (i === album.spotlightIdx && now < album.spotlightUntil);
           const big = entry?.big;
 
-          // remove center pull; gently push special ones outward instead
           if (big || isSpot){
             const pushOut = (big ? 0.06 : 0) + (isSpot ? 0.10 : 0);
             x2 *= (1 + pushOut);
@@ -2173,18 +2136,15 @@
           let px = cx + (x2 * R) / depth;
           let py = cy + (y2 * R) / depth;
 
-          // global spread bias (less center concentration)
-          const spread = 3.00;          // was ~1.16
+          const spread = 3.00;
           px = cx + (px - cx) * spread;
           py = cy + (py - cy) * spread;
-
 
           const depth01 = (z2 + 1) / 2;
           let s = 0.54 + depth01 * 0.60;
           s *= (big ? 1.18 : 1.00);
           if (isSpot) s *= 1.14;
 
-          // inflate: decay targetInflate to 0 after 10s, smoothly
           if (entry){
             if (now > entry.decayAt && entry.targetInflate > 0){
               const decayAlpha = 1 - Math.exp(-dt * 1.6);
@@ -2199,7 +2159,6 @@
 
           const size = Math.max(56, THUMB_BASE * s);
 
-          // clamp target inside bounds
           const r = size * 0.5;
           px = Math.min(album.w - edgePad - r, Math.max(edgePad + r, px));
           py = Math.min(album.h - edgePad - r, Math.max(edgePad + r, py));
@@ -2207,10 +2166,8 @@
           projected.push({ i, x: px, y: py, z: z2, size, isSpot });
         }
 
-        // depth sort (near on top)
         projected.sort((a,b) => a.z - b.z);
 
-        // SOFT overlap relaxation (calm)
         const gap = 22;
         const softness = 0.08;
         const maxStep = 4.5;
@@ -2261,7 +2218,6 @@
           }
         }
 
-        // Apply with inertia (smooth motion)
         const followAlpha = 1 - Math.exp(-dt * 9);
 
         for (let order = 0; order < projected.length; order++){
@@ -2293,22 +2249,20 @@
       album.raf = requestAnimationFrame(tick);
     }
 
-    async function showAlbum(){
+    function stopAlbumOrbit(){
+      album.running = false;
+      if (album.raf) cancelAnimationFrame(album.raf);
+      album.raf = 0;
+    }
+
+    function showAlbum(){
       const wrap = document.getElementById("albumWrap");
       if (!wrap) return;
 
       wrap.classList.remove("hidden");
 
       if (!album.inited){
-        shopToast("loading album…");
-
-        const urls = await discoverAlbumUrls();
-
-        if (!urls.length){
-          shopToast("no images found in /album (jpg/png/webp).");
-          return;
-        }
-
+        const urls = buildAlbumUrls();
         initAlbum(urls);
         shopToast(`loaded ${urls.length} pics.`);
       }
@@ -2318,6 +2272,20 @@
       setTimeout(() => {
         wrap.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 80);
+    }
+
+    window.addEventListener('resize', () => {
+      for (const el of Array.from(bearEls)) placeBear(el);
+      if (album.inited) albumRelayout();
+    });
+
+    // ====== Game wiring ======
+    function showGamePanel(){
+      const panel = document.getElementById('gamePanel');
+      const hint = document.getElementById('tapHint');
+      if (!panel) return;
+      panel.classList.add('show');
+      if (hint) hint.style.display = 'none';
     }
 
     function wireGame(){
